@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::selection {
+  background-color: #ff5c79;
+  color: #12111a;
+}
+
+@layer components {
+  .input {
+    @apply w-full bg-bg border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary
+           placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-spark/50 focus:border-spark
+           transition-colors;
+  }
+
+  /* The signature element: an active/unread conversation gets a soft rose
+     glow instead of a flat highlight — a small nod to the "spark" of a new
+     match, used sparingly so it stays a signal, not decoration. */
+  .conversation-row-active {
+    box-shadow: 0 0 0 1px rgba(255, 92, 121, 0.35), 0 0 24px -6px rgba(255, 92, 121, 0.45);
+  }
+
+  .unread-dot {
+    box-shadow: 0 0 0 3px rgba(255, 92, 121, 0.18);
+  }
+
+  .bubble-in {
+    @apply bg-surface-raised text-text-primary rounded-bubble rounded-bl-md;
+  }
+
+  .bubble-out {
+    @apply bg-gradient-to-br from-spark to-spark-dim text-white rounded-bubble rounded-br-md;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
