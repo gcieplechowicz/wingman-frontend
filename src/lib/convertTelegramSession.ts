@@ -1,10 +1,8 @@
 import { StringSession } from "telegram/sessions";
 
-
-export function convertTelegramSession(
+export async function convertTelegramSession(
   gramJsSessionString: string
-): string {
-
+): Promise<string> {
 
   const gram =
     new StringSession(
@@ -12,73 +10,30 @@ export function convertTelegramSession(
     );
 
 
+  await gram.load();
+
+
   if (!gram.authKey) {
     throw new Error(
-      "Missing GramJS auth key"
+      "Missing GramJS auth key after load()"
     );
   }
 
 
-  const dcId =
-    gram.dcId;
+  const telethon =
+    new StringSession("");
 
 
-  const ip =
-    gram.serverAddress;
+  telethon.setDC(
+    gram.dcId!,
+    gram.serverAddress!,
+    gram.port!
+  );
 
 
-  const port =
-    gram.port;
+  telethon.authKey =
+    gram.authKey;
 
 
-  const key =
-    gram.authKey!.getKey();
-
-  if (!key) {
-    throw new Error(
-      "GramJS auth key bytes missing"
-    );
-  }
-
-  const authKey =
-    Buffer.from(key);
-
-
-  const ipBuffer =
-    Buffer.from(ip);
-
-
-
-  const buffer =
-    Buffer.concat([
-
-      Buffer.from([1]),
-
-      Buffer.from([
-        dcId
-      ]),
-
-      Buffer.from([
-        ipBuffer.length
-      ]),
-
-      ipBuffer,
-
-
-      Buffer.from([
-        port >> 8,
-        port & 0xff
-      ]),
-
-
-      authKey
-
-    ]);
-
-
-
-  return buffer
-    .toString("base64")
-    .replace(/=+$/, "");
-
+  return telethon.save();
 }

@@ -15,10 +15,6 @@ import {
   Api,
 } from "telegram/tl";
 
-import {
-  convertTelegramSession,
-} from "@/lib/convertTelegramSession";
-
 
 export async function POST(
   req: NextRequest
@@ -38,12 +34,13 @@ export async function POST(
     !token ||
     !transportSession
   ) {
+
     return NextResponse.json(
       {
-        error:"Missing QR data"
+        error: "Missing QR data"
       },
       {
-        status:400
+        status: 400
       }
     );
   }
@@ -57,7 +54,7 @@ export async function POST(
       Number(apiId),
       apiHash,
       {
-        connectionRetries:3,
+        connectionRetries: 3,
       }
     );
 
@@ -94,40 +91,69 @@ export async function POST(
     );
 
 
+
     if (
-      result instanceof Api.auth.LoginTokenSuccess
+      result instanceof Api.auth.LoginTokenMigrateTo
+    ) {
+
+      console.log(
+        "MIGRATE REQUIRED TO DC:",
+        result.dcId
+      );
+
+
+      await client._switchDC(
+        result.dcId
+      );
+
+
+      const migrated =
+        await client.invoke(
+          new Api.auth.ImportLoginToken({
+            token: Buffer.from(
+              token,
+              "base64url"
+            ),
+          })
+        );
+
+
+      if (
+        !(migrated instanceof Api.auth.LoginTokenSuccess)
+      ) {
+
+        await client.disconnect();
+
+        return NextResponse.json({
+          status: "pending"
+        });
+
+      }
+
+
+    }
+
+
+    if (
+      result instanceof Api.auth.LoginTokenSuccess ||
+      result instanceof Api.auth.LoginTokenMigrateTo
     ) {
 
 
       console.log(
-        "LOGIN TOKEN SUCCESS DC:",
-        result.authorization.dcId
+        "LOGIN SUCCESS"
       );
 
 
-      const newClient =
-        new TelegramClient(
-          new StringSession(""),
-          Number(apiId),
-          apiHash,
-          {
-            connectionRetries:3,
-          }
-        );
-
-
-      await newClient.connect();
-
-
-
-      await newClient._switchDC(
-        result.authorization.dcId
-      );
-
+      /*
+       * Bardzo ważne:
+       * używamy TEGO SAMEGO clienta.
+       * Tutaj jest authKey po QR login.
+       */
 
 
       const me =
-        await newClient.getMe();
+        await client.getMe();
 
 
       console.log(
@@ -137,33 +163,32 @@ export async function POST(
 
 
       const gramJsSession =
-        newClient.session.save();
+        (client.session as any).save() as string;
 
 
       console.log(
-        "NEW SESSION:",
-        gramJsSession.substring(0,30)
+        "GRAM SESSION PREFIX:",
+        gramJsSession.substring(0, 40)
       );
 
 
-      await newClient.disconnect();
+      console.log(
+        "DC:",
+        client.session.dcId
+      );
 
-
-      return NextResponse.json({
-        status:"AUTHORIZED",
-        sessionString:gramJsSession
-      });
-
-    }
-
-
-    if (
-      result instanceof Api.auth.LoginTokenMigrateTo
-    ) {
 
       console.log(
-        "MIGRATE REQUIRED:",
-        result.dcId
+        "SERVER:",
+        client.session.serverAddress
+      );
+
+
+      console.log(
+        "HAS AUTH:",
+        Boolean(
+          client.session.authKey
+        )
       );
 
 
@@ -171,18 +196,27 @@ export async function POST(
 
 
       return NextResponse.json({
-        status:"migrate",
-        dcId: result.dcId
+
+        status: "AUTHORIZED",
+
+        sessionString:
+          gramJsSession
+
       });
+
     }
+
 
 
     await client.disconnect();
 
 
     return NextResponse.json({
-      status:"pending"
+
+      status: "pending"
+
     });
+
 
 
   } catch(err) {
@@ -200,7 +234,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        status:"error",
+        status: "error",
+
         error:
           err instanceof Error
             ? err.message
