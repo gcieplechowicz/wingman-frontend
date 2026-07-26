@@ -38,7 +38,6 @@ export async function POST(
     !token ||
     !transportSession
   ) {
-
     return NextResponse.json(
       {
         error:"Missing QR data"
@@ -48,7 +47,6 @@ export async function POST(
       }
     );
   }
-
 
 
   const client =
@@ -64,12 +62,19 @@ export async function POST(
     );
 
 
-
   try {
+
+    console.log(
+      "STEP 1 - before connect"
+    );
 
 
     await client.connect();
 
+
+    console.log(
+      "STEP 2 - connected"
+    );
 
 
     const result =
@@ -83,65 +88,80 @@ export async function POST(
       );
 
 
+    console.log(
+      "STEP 3 RESULT:",
+      result.className
+    );
+
 
     if (
       result instanceof Api.auth.LoginTokenSuccess
     ) {
 
 
-      /*
-       * At this point GramJS has the
-       * authorized auth key.
-       *
-       * Convert BEFORE disconnect.
-       */
-
-      const gramJsSession = (
-        client.session.save as unknown as () => string
-      )();
-
       console.log(
-         "GRAM SESSION:",
-         gramJsSession
-       );
+        "STEP 4 LOGIN SUCCESS"
+      );
 
-      const telethonSession: string =
+
+      const telethonSession =
         convertTelegramSession(
-          gramJsSession
+          client.session as StringSession
         );
 
+
+      console.log(
+        "TELETHON SESSION:",
+        telethonSession
+      );
 
 
       await client.disconnect();
 
 
-
       return NextResponse.json({
-
         status:"AUTHORIZED",
-
-        sessionString:
-          telethonSession
-
+        sessionString: telethonSession
       });
 
     }
 
 
+    if (
+      result instanceof Api.auth.LoginTokenMigrateTo
+    ) {
+
+      console.log(
+        "MIGRATE REQUIRED:",
+        result.dcId
+      );
+
+
+      await client.disconnect();
+
+
+      return NextResponse.json({
+        status:"migrate",
+        dcId: result.dcId
+      });
+    }
+
 
     await client.disconnect();
 
 
-
     return NextResponse.json({
-
       status:"pending"
-
     });
 
 
-
   } catch(err) {
+
+
+    console.error(
+      "QR ERROR",
+      err
+    );
 
 
     await client.disconnect()
@@ -151,13 +171,13 @@ export async function POST(
     return NextResponse.json(
       {
         status:"error",
-
         error:
           err instanceof Error
             ? err.message
             : "QR check failed"
       }
     );
+
   }
 
 }
