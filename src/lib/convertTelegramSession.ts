@@ -33,22 +33,8 @@ export function convertTelegramSession(
 
   const authKey =
     Buffer.from(
-      gram.authKey.getKey()
+      gram.authKey!.getKey()
     );
-
-
-
-  /*
-   Telethon StringSession format:
-
-   version byte
-   dc_id
-   ip length
-   ip
-   port
-   auth_key
-
-  */
 
 
   const ipBuffer =
@@ -64,7 +50,6 @@ export function convertTelegramSession(
       Buffer.from([
         dcId
       ]),
-
 
       Buffer.from([
         ipBuffer.length
