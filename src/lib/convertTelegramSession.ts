@@ -19,62 +19,74 @@ export function convertTelegramSession(
   }
 
 
-  const telethon =
-    new StringSession("");
+  const dcId =
+    gram.dcId;
 
 
-
-  telethon.setDC(
-    gram.dcId,
-    normalizeServer(
-      gram.serverAddress
-    ),
-    443
-  );
+  const ip =
+    gram.serverAddress;
 
 
-
-  (telethon as any).authKey =
-    gram.authKey;
-
+  const port =
+    gram.port;
 
 
-  return telethon.save();
+  const authKey =
+    Buffer.from(
+      gram.authKey.getKey()
+    );
 
-}
-
-
-
-function normalizeServer(
-  server:string
-):string {
 
 
   /*
-   * GramJS czasami zwraca
-   * zakodowany adres.
-   *
-   * Telethon potrzebuje normalnego IP.
-   */
+   Telethon StringSession format:
+
+   version byte
+   dc_id
+   ip length
+   ip
+   port
+   auth_key
+
+  */
 
 
-  if (
-    server.startsWith("e:")
-  ) {
-
-    const decoded =
-      Buffer.from(
-        server.substring(2),
-        "hex"
-      )
-      .toString("ascii");
+  const ipBuffer =
+    Buffer.from(ip);
 
 
-    return decoded;
 
-  }
+  const buffer =
+    Buffer.concat([
+
+      Buffer.from([1]),
+
+      Buffer.from([
+        dcId
+      ]),
 
 
-  return server;
+      Buffer.from([
+        ipBuffer.length
+      ]),
+
+      ipBuffer,
+
+
+      Buffer.from([
+        port >> 8,
+        port & 0xff
+      ]),
+
+
+      authKey
+
+    ]);
+
+
+
+  return buffer
+    .toString("base64")
+    .replace(/=+$/, "");
 
 }
