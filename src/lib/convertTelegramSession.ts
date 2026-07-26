@@ -1,8 +1,11 @@
 import { StringSession } from "telegram/sessions";
+import { AuthKey } from "telegram/crypto/AuthKey";
+
 
 export async function convertTelegramSession(
   gramJsSessionString: string
 ): Promise<string> {
+
 
   const gram =
     new StringSession(
@@ -15,9 +18,13 @@ export async function convertTelegramSession(
 
   if (!gram.authKey) {
     throw new Error(
-      "Missing GramJS auth key after load()"
+      "Missing GramJS auth key after load"
     );
   }
+
+
+  const authKey =
+    gram.authKey.getKey();
 
 
   const telethon =
@@ -31,9 +38,14 @@ export async function convertTelegramSession(
   );
 
 
-  telethon.authKey =
-    gram.authKey;
+  (telethon as any).authKey =
+    new AuthKey();
+
+  (telethon as any).authKey.setKey(
+    authKey
+  );
 
 
   return telethon.save();
+
 }

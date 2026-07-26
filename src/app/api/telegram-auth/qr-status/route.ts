@@ -15,6 +15,9 @@ import {
   Api,
 } from "telegram/tl";
 
+import {
+  convertTelegramSession,
+} from "@/lib/convertTelegramSession";
 
 export async function POST(
   req: NextRequest
@@ -165,32 +168,10 @@ export async function POST(
       const gramJsSession =
         (client.session as any).save() as string;
 
-
-      console.log(
-        "GRAM SESSION PREFIX:",
-        gramJsSession.substring(0, 40)
-      );
-
-
-      console.log(
-        "DC:",
-        client.session.dcId
-      );
-
-
-      console.log(
-        "SERVER:",
-        client.session.serverAddress
-      );
-
-
-      console.log(
-        "HAS AUTH:",
-        Boolean(
-          client.session.authKey
-        )
-      );
-
+      const telethonSession =
+        await convertTelegramSession(
+          gramJsSession
+        );
 
       await client.disconnect();
 
