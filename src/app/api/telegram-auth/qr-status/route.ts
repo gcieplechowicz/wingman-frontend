@@ -15,9 +15,6 @@ import {
   Api,
 } from "telegram/tl";
 
-import {
-  convertTelegramSession,
-} from "@/lib/convertTelegramSession";
 
 export async function POST(
   req: NextRequest
@@ -46,6 +43,7 @@ export async function POST(
         status: 400
       }
     );
+
   }
 
 
@@ -77,7 +75,7 @@ export async function POST(
     );
 
 
-    const result =
+    let result =
       await client.invoke(
         new Api.auth.ImportLoginToken({
           token: Buffer.from(
@@ -95,6 +93,11 @@ export async function POST(
 
 
 
+    /*
+      QR login może wymagać migracji
+      na inny DC.
+    */
+
     if (
       result instanceof Api.auth.LoginTokenMigrateTo
     ) {
@@ -110,7 +113,7 @@ export async function POST(
       );
 
 
-      const migrated =
+      result =
         await client.invoke(
           new Api.auth.ImportLoginToken({
             token: Buffer.from(
@@ -121,27 +124,18 @@ export async function POST(
         );
 
 
-      if (
-        !(migrated instanceof Api.auth.LoginTokenSuccess)
-      ) {
-
-        await client.disconnect();
-
-        return NextResponse.json({
-          status: "pending"
-        });
-
-      }
-
+      console.log(
+        "AFTER MIGRATION RESULT:",
+        result.className
+      );
 
     }
 
 
-    if (
-      result instanceof Api.auth.LoginTokenSuccess ||
-      result instanceof Api.auth.LoginTokenMigrateTo
-    ) {
 
+    if (
+      result instanceof Api.auth.LoginTokenSuccess
+    ) {
 
       console.log(
         "LOGIN SUCCESS"
@@ -149,11 +143,9 @@ export async function POST(
 
 
       /*
-       * Bardzo ważne:
-       * używamy TEGO SAMEGO clienta.
-       * Tutaj jest authKey po QR login.
-       */
-
+        Wymuszamy zapis pełnej
+        autoryzowanej sesji.
+      */
 
       const me =
         await client.getMe();
@@ -161,17 +153,19 @@ export async function POST(
 
       console.log(
         "AUTHORIZED USER:",
-        me.id
+        me.id.toString()
       );
 
 
       const gramJsSession =
-        (client.session as any).save() as string;
+        (client.session as any).save();
 
-      const telethonSession =
-        await convertTelegramSession(
-          gramJsSession
-        );
+
+      console.log(
+        "SESSION PREFIX:",
+        gramJsSession.substring(0, 40)
+      );
+
 
       await client.disconnect();
 
@@ -181,7 +175,12 @@ export async function POST(
         status: "AUTHORIZED",
 
         sessionString:
-          gramJsSession
+          gramJsSession,
+
+        user: {
+          id: me.id.toString(),
+          username: me.username
+        }
 
       });
 
