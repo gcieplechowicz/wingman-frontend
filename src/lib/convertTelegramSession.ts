@@ -1,36 +1,70 @@
-import { StringSession } from "telegram/sessions";
+try {
 
-export function convertTelegramSession(
-  convertTelegramSession:string
-):string {
+  console.log("STEP 1 - before connect");
 
-  const gram =
-    new StringSession(
-      convertTelegramSession
+  await client.connect();
+
+  console.log("STEP 2 - connected");
+
+
+  const result =
+    await client.invoke(
+      new Api.auth.ImportLoginToken({
+        token: Buffer.from(
+          token,
+          "base64url"
+        ),
+      })
     );
 
 
-  if (!gram.authKey) {
-    throw new Error(
-      "Missing auth key"
-    );
-  }
-
-
-  const telethon =
-    new StringSession("");
-
-
-  telethon.setDC(
-    gram.dcId,
-    gram.serverAddress,
-    gram.port
+  console.log(
+    "STEP 3 - import token result",
+    result.className
   );
 
 
-  (telethon as any).authKey =
-      gram.authKey;
+  if (
+    result instanceof Api.auth.LoginTokenSuccess
+  ) {
+
+    console.log("STEP 4 - login success");
 
 
-  return telethon.save();
-}
+    const gramJsSession =
+      client.session.save();
+
+
+    console.log(
+      "GRAM SESSION:",
+      gramJsSession
+    );
+
+
+    const telethonSession =
+      await convertTelegramSession(
+        gramJsSession
+      );
+
+
+    console.log(
+      "TELETHON SESSION:",
+      telethonSession
+    );
+
+
+    await client.disconnect();
+
+
+    return NextResponse.json({
+      status:"AUTHORIZED",
+      sessionString: telethonSession
+    });
+
+  }
+
+
+  console.log(
+    "NOT AUTHORIZED RESULT",
+    result.className
+  );
