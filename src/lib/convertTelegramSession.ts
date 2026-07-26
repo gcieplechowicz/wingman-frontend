@@ -31,10 +31,17 @@ export function convertTelegramSession(
     gram.port;
 
 
-  const authKey =
-    Buffer.from(
-      gram.authKey!.getKey()
+  const key =
+    gram.authKey!.getKey();
+
+  if (!key) {
+    throw new Error(
+      "GramJS auth key bytes missing"
     );
+  }
+
+  const authKey =
+    Buffer.from(key);
 
 
   const ipBuffer =
