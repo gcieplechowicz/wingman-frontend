@@ -99,29 +99,62 @@ export async function POST(
     ) {
 
 
+      /*
+       * Force GramJS to finalize authorization
+       * and update session state.
+       */
+      await client.getMe();
+
+
+
+      const gramJsSession =
+        client.session.save();
+
+
+
       console.log(
-        "STEP 4 LOGIN SUCCESS"
+        "GRAM SESSION PREFIX:",
+        gramJsSession.substring(0, 30)
       );
+
+
+      console.log(
+        "GRAM DC:",
+        client.session.dcId
+      );
+
+
+      console.log(
+        "GRAM SERVER:",
+        client.session.serverAddress
+      );
+
+
+      console.log(
+        "GRAM PORT:",
+        client.session.port
+      );
+
 
 
       const telethonSession =
         convertTelegramSession(
-          client.session as StringSession
+          gramJsSession
         );
 
-
-      console.log(
-        "TELETHON SESSION:",
-        telethonSession
-      );
 
 
       await client.disconnect();
 
 
+
       return NextResponse.json({
+
         status:"AUTHORIZED",
-        sessionString: telethonSession
+
+        sessionString:
+          telethonSession
+
       });
 
     }

@@ -2,13 +2,19 @@ import { StringSession } from "telegram/sessions";
 
 
 export function convertTelegramSession(
-  gram: StringSession
+  gramJsSessionString: string
 ): string {
+
+
+  const gram =
+    new StringSession(
+      gramJsSessionString
+    );
 
 
   if (!gram.authKey) {
     throw new Error(
-      "Missing auth key"
+      "Missing GramJS auth key"
     );
   }
 
@@ -17,27 +23,58 @@ export function convertTelegramSession(
     new StringSession("");
 
 
+
   telethon.setDC(
     gram.dcId,
-    gram.serverAddress,
-    gram.port
+    normalizeServer(
+      gram.serverAddress
+    ),
+    443
   );
+
 
 
   (telethon as any).authKey =
     gram.authKey;
 
 
-  const result =
-    (telethon as any).save();
+
+  return telethon.save();
+
+}
 
 
-  if (typeof result !== "string") {
-    throw new Error(
-      "Failed generating Telethon session"
-    );
+
+function normalizeServer(
+  server:string
+):string {
+
+
+  /*
+   * GramJS czasami zwraca
+   * zakodowany adres.
+   *
+   * Telethon potrzebuje normalnego IP.
+   */
+
+
+  if (
+    server.startsWith("e:")
+  ) {
+
+    const decoded =
+      Buffer.from(
+        server.substring(2),
+        "hex"
+      )
+      .toString("ascii");
+
+
+    return decoded;
+
   }
 
 
-  return result;
+  return server;
+
 }
