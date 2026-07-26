@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import QRCode from "qrcode.react";
-
+import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 type Step =
   | "idle"
   | "starting"
   | "waiting"
   | "done"
   | "error";
+
+
+type QRData = {
+  qrUrl: string;
+  token: string;
+  transportSession: string;
+  apiId: string;
+  apiHash: string;
+};
 
 
 export function TelegramLoginWizard({
@@ -21,10 +29,13 @@ export function TelegramLoginWizard({
   onSessionReady: (sessionString: string) => void;
 }) {
 
+
   const [step, setStep] = useState<Step>("idle");
-  const [qrUrl, setQrUrl] = useState("");
-  const [flowId, setFlowId] = useState("");
+
+  const [qrData, setQrData] = useState<QRData | null>(null);
+
   const [error, setError] = useState<string | null>(null);
+
 
 
   const ready = Boolean(
@@ -33,10 +44,12 @@ export function TelegramLoginWizard({
   );
 
 
+
   async function startQrLogin() {
 
     setStep("starting");
     setError(null);
+
 
     try {
 
@@ -44,6 +57,9 @@ export function TelegramLoginWizard({
         "/api/telegram-auth/qr-start",
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             apiId,
             apiHash,
@@ -54,6 +70,7 @@ export function TelegramLoginWizard({
 
       const data = await res.json();
 
+
       if (!res.ok) {
         throw new Error(
           data.error ?? "Failed to start QR login"
@@ -61,15 +78,12 @@ export function TelegramLoginWizard({
       }
 
 
-      setQrUrl(data.qrUrl);
-      setFlowId(data.flowId);
+      setQrData(data);
+
       setStep("waiting");
 
 
-      pollStatus(data.flowId);
-
-
-    } catch (err) {
+    } catch(err) {
 
       setError(
         err instanceof Error
@@ -79,138 +93,266 @@ export function TelegramLoginWizard({
 
       setStep("error");
     }
+
   }
 
 
 
-  async function pollStatus(id: string) {
+  useEffect(() => {
 
-    const interval = setInterval(async () => {
 
-      try {
+    if (
+      step !== "waiting" ||
+      !qrData
+    ) {
+      return;
+    }
 
-        const res = await fetch(
-          "/api/telegram-auth/qr-status",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              flowId: id,
-            }),
+
+    const interval = setInterval(
+      async () => {
+
+
+        try {
+
+
+          const res = await fetch(
+            "/api/telegram-auth/qr-status",
+            {
+              method:"POST",
+              headers:{
+                "Content-Type":"application/json",
+              },
+              body:JSON.stringify({
+
+                apiId: qrData.apiId,
+
+                apiHash: qrData.apiHash,
+
+                token: qrData.token,
+
+                transportSession:
+                  qrData.transportSession,
+
+              }),
+            }
+          );
+
+
+
+          const data = await res.json();
+
+
+
+          if (!res.ok) {
+
+            throw new Error(
+              data.error ??
+              "QR verification failed"
+            );
+
           }
-        );
 
 
-        const data = await res.json();
+
+          if (
+            data.status === "done"
+          ) {
 
 
-        if (!res.ok) {
-          throw new Error(data.error);
-        }
+            clearInterval(interval);
 
 
-        if (data.status === "AUTHORIZED") {
+            onSessionReady(
+              data.sessionString
+            );
+
+
+            setStep("done");
+
+          }
+
+
+
+        } catch(err) {
+
 
           clearInterval(interval);
 
-          onSessionReady(
-            data.sessionString
+
+          setError(
+            err instanceof Error
+              ? err.message
+              : "QR verification failed"
           );
 
-          setStep("done");
+
+          setStep("error");
+
         }
 
 
-      } catch (err) {
-
-        clearInterval(interval);
-
-        setError(
-          err instanceof Error
-            ? err.message
-            : "QR verification failed"
-        );
-
-        setStep("error");
-      }
-
-    }, 3000);
-
-  }
+      },
+      3000
+    );
 
 
 
-  if (step === "done") {
+    return () => {
+      clearInterval(interval);
+    };
+
+
+  }, [
+    step,
+    qrData,
+    onSessionReady
+  ]);
+
+
+
+
+
+  if(step==="done") {
 
     return (
-      <div className="flex items-center gap-2 text-sm text-online bg-online/10 border border-online/30 rounded-xl px-4 py-2.5">
+
+      <div className="
+        flex items-center gap-2
+        text-sm text-online
+        bg-online/10
+        border border-online/30
+        rounded-xl px-4 py-2.5
+      ">
+
         ✓ Telegram account connected
+
       </div>
+
     );
+
   }
+
+
 
 
 
   return (
-    <div className="border border-border rounded-xl p-4 space-y-4 bg-surface">
+
+    <div className="
+      border border-border
+      rounded-xl p-4
+      space-y-4
+      bg-surface
+    ">
+
 
       <p className="text-sm font-medium">
         Connect Telegram account
       </p>
 
 
-      {step === "idle" ||
-       step === "error" ? (
+
+
+      {(step==="idle" || step==="error") && (
 
         <button
+
+          type="button"
+
           disabled={!ready}
+
           onClick={startQrLogin}
-          className="text-xs font-medium bg-spark text-white px-4 py-2 rounded-full disabled:opacity-50"
+
+          className="
+            text-xs font-medium
+            bg-spark text-white
+            px-4 py-2
+            rounded-full
+            disabled:opacity-50
+          "
+
         >
           Connect with Telegram QR
+
         </button>
 
-      ) : null}
-
-
-
-      {step === "starting" && (
-        <p className="text-sm">
-          Generating QR...
-        </p>
       )}
 
 
 
-      {step === "waiting" && qrUrl && (
+
+
+
+      {step==="starting" && (
+
+        <p className="text-sm">
+          Generating QR...
+        </p>
+
+      )}
+
+
+
+
+
+
+      {step==="waiting" && qrData && (
 
         <div className="space-y-3">
 
+
           <p className="text-xs text-text-muted">
-            Open Telegram → Settings → Devices → Link Desktop Device
+
+            Telegram →
+            Settings →
+            Devices →
+            Link Desktop Device
+
           </p>
 
 
-          <QRCode
-            value={qrUrl}
+
+          <QRCodeSVG
+
+            value={qrData.qrUrl}
+
             size={220}
+
           />
 
 
+
           <p className="text-xs text-text-muted">
+
             Waiting for scan...
+
           </p>
+
 
         </div>
 
       )}
 
 
+
+
+
+
       {error && (
+
         <p className="text-xs text-spark">
+
           {error}
+
         </p>
+
       )}
 
+
+
     </div>
+
   );
+
 }

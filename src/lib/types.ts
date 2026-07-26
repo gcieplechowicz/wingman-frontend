@@ -43,7 +43,7 @@ export type Page<T> = {
 export type TenantCreateInput = {
   telegramApiId: number;
   telegramApiHash: string;
-  telegramPhoneNumber: string;
+  telegramPhoneNumber?: string;
   telegramSessionString: string;
   name: string;
   personaAge: number;

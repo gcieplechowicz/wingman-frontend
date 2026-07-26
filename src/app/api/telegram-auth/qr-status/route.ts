@@ -1,28 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
+import { Api } from "telegram/tl";
 
 
-import { pending } from "../qr-start/route";
+export async function POST(req: NextRequest) {
 
-
-export async function POST(
-  req: NextRequest
-) {
 
   const {
-    flowId
+    apiId,
+    apiHash,
+    token,
+    transportSession,
   } = await req.json();
 
 
-  const item =
-    pending.get(flowId);
 
-
-
-  if (!item) {
+  if (
+    !apiId ||
+    !apiHash ||
+    !token ||
+    !transportSession
+  ) {
 
     return NextResponse.json(
       {
-        error: "QR expired"
+        error: "Missing QR data"
       },
       {
         status:400
@@ -32,56 +35,98 @@ export async function POST(
 
 
 
-  const {
-    client
-  } = item;
+  const client = new TelegramClient(
+    new StringSession(transportSession),
+    Number(apiId),
+    apiHash,
+    {
+      connectionRetries:3,
+    }
+  );
 
 
 
-  const authorized =
-    await client.isUserAuthorized();
+  try {
+
+    await client.connect();
 
 
 
-  if (!authorized) {
+    const result = await client.invoke(
+      new Api.auth.ImportLoginToken({
+        token: Buffer.from(
+          token,
+          "base64url"
+        ),
+      })
+    );
+
+
+
+    if (
+      result instanceof Api.auth.LoginTokenSuccess
+    ) {
+
+
+      const sessionString =
+        client.session.save();
+
+
+      const me =
+        await client.getMe();
+
+
+
+      await client.disconnect();
+
+
+
+      return NextResponse.json({
+
+        status:"done",
+
+        sessionString,
+
+        user:{
+          id: me.id.toString(),
+          username: me.username,
+          firstName: me.firstName,
+        }
+
+      });
+
+    }
+
+
+
+    await client.disconnect();
+
+
 
     return NextResponse.json({
-      status:"WAITING"
+
+      status:"pending"
+
+    });
+
+
+
+  } catch(err){
+
+
+    await client.disconnect().catch(()=>{});
+
+
+    return NextResponse.json({
+
+      status:"error",
+
+      error:
+        err instanceof Error
+          ? err.message
+          : "QR check failed"
+
     });
 
   }
-
-
-
-  const me =
-    await client.getMe();
-
-
-
-  const sessionString =
-    client.session.save();
-
-
-
-  await client.disconnect();
-
-
-  pending.delete(flowId);
-
-
-
-  return NextResponse.json({
-
-    status:"AUTHORIZED",
-
-    sessionString,
-
-    user:{
-      id:me.id,
-      username:me.username,
-      firstName:me.firstName
-    }
-
-  });
-
 }

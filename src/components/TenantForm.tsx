@@ -131,7 +131,6 @@ export function TenantForm(props: Props) {
             <TelegramLoginWizard
               apiId={telegramApiId}
               apiHash={telegramApiHash}
-              phoneNumber={telegramPhoneNumber}
               onSessionReady={setTelegramSessionString}
             />
           </Field>
