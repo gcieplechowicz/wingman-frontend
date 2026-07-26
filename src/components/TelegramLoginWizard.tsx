@@ -156,7 +156,7 @@ export function TelegramLoginWizard({
 
 
           if (
-            data.status === "done"
+            data.status === "AUTHORIZED"
           ) {
 
 
