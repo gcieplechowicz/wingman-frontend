@@ -47,7 +47,7 @@ export function TenantForm(props: Props) {
           name,
           telegramApiId: Number(telegramApiId),
           telegramApiHash,
-          telegramPhoneNumber,
+          telegramPhoneNumber: telegramPhoneNumber || undefined,
           telegramSessionString,
           personaAge: Number(personaAge),
           personaGender,
@@ -119,16 +119,15 @@ export function TenantForm(props: Props) {
               className="input font-mono text-sm"
             />
           </Field>
-          <Field label="Phone number" hint="The Telegram account's own phone number, in international format">
+          <Field label="Phone number (optional)" hint="Optional metadata. QR login does not require a phone number">
             <input
-              required
               value={telegramPhoneNumber}
               onChange={(e) => setTelegramPhoneNumber(e.target.value)}
               placeholder="+1 555 0100"
               className="input font-mono text-sm"
             />
           </Field>
-          <Field label="Session string" hint="Log in below — this fills in automatically once connected">
+          <Field label="Telegram connection" hint="Scan the QR code with Telegram. Session string will be generated automatically." >
             <TelegramLoginWizard
               apiId={telegramApiId}
               apiHash={telegramApiHash}
