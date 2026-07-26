@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Tenant, TenantCreateInput, TenantUpdateInput } from "@/lib/types";
+import { TelegramLoginWizard } from "@/components/TelegramLoginWizard";
 
 const CHAT_STYLES = [
   { value: "flirty", label: "Flirty" },
@@ -127,14 +128,12 @@ export function TenantForm(props: Props) {
               className="input font-mono text-sm"
             />
           </Field>
-          <Field label="Session string" hint="Produced once by logging into this account via the offline login script — see the telegram-integration-service README">
-            <input
-              required
-              type="password"
-              value={telegramSessionString}
-              onChange={(e) => setTelegramSessionString(e.target.value)}
-              placeholder="Paste the session string here"
-              className="input font-mono text-sm"
+          <Field label="Session string" hint="Log in below — this fills in automatically once connected">
+            <TelegramLoginWizard
+              apiId={telegramApiId}
+              apiHash={telegramApiHash}
+              phoneNumber={telegramPhoneNumber}
+              onSessionReady={setTelegramSessionString}
             />
           </Field>
         </section>
@@ -217,10 +216,13 @@ export function TenantForm(props: Props) {
       </section>
 
       {error && <p className="text-sm text-spark">{error}</p>}
+      {props.mode === "create" && !telegramSessionString && (
+        <p className="text-xs text-text-muted">Finish connecting the Telegram account above to continue.</p>
+      )}
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || (props.mode === "create" && !telegramSessionString)}
         className="bg-spark hover:bg-spark-glow disabled:opacity-50 transition-colors text-white font-medium px-6 py-2.5 rounded-full"
       >
         {submitting ? "Saving…" : props.mode === "create" ? "Connect & start replying" : "Save changes"}

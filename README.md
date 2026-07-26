@@ -16,7 +16,49 @@ WhatsApp-Web-style split view.
 | `/dashboard/[tenantId]/conversations/[conversationId]` | Same view with a conversation selected |
 | `/dashboard/[tenantId]/settings` | Edit persona config — age, gender, chat style, language, active flag |
 
-## Approving, blocking, and deleting conversations
+## Connecting a Telegram account (in-app login)
+
+The "Connect a Telegram account" form no longer asks for a session string to
+be pasted in from an offline script — it's generated interactively, inside
+the form, via `TelegramLoginWizard`:
+
+1. Fill in `api_id`/`api_hash` (from [my.telegram.org](https://my.telegram.org),
+   entirely outside this app) and the account's phone number.
+2. Click "Send login code" — this hits `POST /api/telegram-auth/send-code`,
+   which connects to Telegram directly from a Next.js API route using
+   [GramJS](https://gram.js.org) (the JS equivalent of Telethon) and requests
+   a login code.
+3. Enter the code (and a 2FA password, if the account has one) — this hits
+   `POST /api/telegram-auth/verify-code`, which finishes the login and
+   returns a portable session string.
+4. That session string fills the form's hidden field automatically, and the
+   submit button unlocks.
+
+**Why this needed a specific design, not just "call GramJS twice":** on
+Vercel, API routes are stateless serverless functions — `/send-code` and
+`/verify-code` can easily run on two different instances, especially since
+there's a real-world delay (checking the phone for the code) between them.
+Rather than holding a live connection in server memory across that gap, the
+in-progress connection's transport-level session (the MTProto auth key for
+the Telegram data center, saved *before* the account is actually logged in)
+is round-tripped through the browser and used to resume the exact same
+connection in step 2. The two API routes' own comments walk through this in
+more detail.
+
+**Confidence note, in the same spirit as other honesty flags in this
+project:** GramJS's general shape (`TelegramClient`, `StringSession`,
+`connect`/`sendCode`/`session.save()`) is something I'm confident in, and the
+overall two-step reconnect architecture is sound MTProto usage regardless of
+library specifics. The one place I'd double-check against
+[gram.js.org](https://gram.js.org)'s current docs before relying on this in
+production is the exact 2FA/password-verification call in
+`verify-code/route.ts` — it's flagged inline in that file.
+
+This was a frontend-only change — `telegram-integration-service` and its
+`generate_session.py` offline script are untouched and still work as a
+fallback if you ever want to generate a session string outside the app.
+
+
 
 Every brand-new conversation starts `PENDING` — reply-consumer-service
 persists incoming messages but does not call the LLM or send a Telegram
