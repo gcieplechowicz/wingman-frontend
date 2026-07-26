@@ -107,8 +107,8 @@ export async function POST(
 
 
 
-      const gramJsSession =
-        client.session.save();
+      const gramJsSession: string =
+        (client.session as StringSession).save();
 
 
 
