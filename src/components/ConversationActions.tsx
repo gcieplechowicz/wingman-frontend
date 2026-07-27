@@ -89,7 +89,7 @@ export function ConversationActions({
   }
 
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="hidden md:flex items-center justify-end gap-2">
       <button
         disabled={submitting}
         onClick={() => setStatus("BLOCKED")}

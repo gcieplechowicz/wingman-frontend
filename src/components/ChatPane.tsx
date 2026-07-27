@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Conversation, Message } from "@/lib/types";
-import { MessageBubble } from "@/components/MessageBubble";
+import { MessageList } from "@/components/MessageList";
 import { ConversationActions } from "@/components/ConversationActions";
+import { ChatMenu } from "@/components/ChatMenu";
 import { contactLabel } from "@/lib/format";
 
 export function ChatPane({
@@ -16,29 +17,25 @@ export function ChatPane({
   return (
     <div className="flex-1 min-w-0 flex flex-col h-full">
       <div className="border-b border-border px-4 md:px-6 py-3 md:py-3.5 shrink-0 space-y-3">
-        <Link
-          href={`/dashboard/${tenantId}/conversations`}
-          className="md:hidden inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-primary"
-        >
-          ← All conversations
-        </Link>
-        <div>
-          <p className="font-medium text-sm">{contactLabel(conversation)}</p>
-          <p className="text-xs text-text-muted">{messages.length} messages</p>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/dashboard/${tenantId}/conversations`}
+            aria-label="Back to all conversations"
+            title="Back to all conversations"
+            className="md:hidden shrink-0 text-text-muted hover:text-text-primary text-lg leading-none"
+          >
+            ←
+          </Link>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm truncate">{contactLabel(conversation)}</p>
+            <p className="text-xs text-text-muted">{messages.length} messages</p>
+          </div>
+          <ChatMenu tenantId={tenantId} conversation={conversation} />
         </div>
         <ConversationActions tenantId={tenantId} conversation={conversation} />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-6 space-y-3 bg-bg">
-        {conversation.summary && (
-          <div className="mx-auto max-w-md text-center text-xs text-text-muted bg-surface rounded-full px-4 py-1.5 mb-4">
-            {conversation.summary}
-          </div>
-        )}
-        {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
-        ))}
-      </div>
+      <MessageList summary={conversation.summary} messages={messages} />
     </div>
   );
 }
