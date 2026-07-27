@@ -88,18 +88,9 @@ export function ConversationActions({
     );
   }
 
-  return (
-    <div className="hidden md:flex items-center justify-end gap-2">
-      <button
-        disabled={submitting}
-        onClick={() => setStatus("BLOCKED")}
-        className="text-xs font-medium text-text-muted hover:text-spark transition-colors px-3 py-1.5"
-      >
-        Block this person
-      </button>
-      <DeleteButton confirming={confirmingDelete} submitting={submitting} onClick={handleDelete} />
-    </div>
-  );
+  // APPROVED: Block/Delete now live in ChatMenu's "..." dropdown instead
+  // (see ChatPane), on every breakpoint - nothing to render here.
+  return null;
 }
 
 function DeleteButton({

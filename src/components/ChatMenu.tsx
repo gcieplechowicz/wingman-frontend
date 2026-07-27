@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import type { Conversation } from "@/lib/types";
 
 /**
- * Mobile-only "..." overflow menu for Block/Delete, replacing the inline
- * text buttons ConversationActions renders for APPROVED conversations on
- * desktop - those two buttons alone were eating a full row of already-scarce
- * mobile screen space. PENDING/BLOCKED conversations keep their existing
- * banner (ConversationActions) on every breakpoint, since Approve/Unblock
- * are primary decisions worth staying visible, not tucked into a menu.
+ * "..." overflow menu for Block/Delete on APPROVED conversations, on every
+ * breakpoint - replaces what used to be two always-visible inline text
+ * buttons (ConversationActions' old default branch, now a no-op for this
+ * status). PENDING/BLOCKED conversations keep their existing banner
+ * (ConversationActions) instead, since Approve/Unblock are primary
+ * decisions worth staying visible, not tucked into a menu.
  */
 export function ChatMenu({ tenantId, conversation }: { tenantId: string; conversation: Conversation }) {
   const router = useRouter();
@@ -65,7 +65,7 @@ export function ChatMenu({ tenantId, conversation }: { tenantId: string; convers
   }
 
   return (
-    <div ref={menuRef} className="relative md:hidden shrink-0">
+    <div ref={menuRef} className="relative shrink-0">
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Conversation options"
