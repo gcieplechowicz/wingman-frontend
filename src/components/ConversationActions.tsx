@@ -47,7 +47,7 @@ export function ConversationActions({
 
   if (conversation.status === "PENDING") {
     return (
-      <div className="flex items-center gap-2 bg-violet/10 border border-violet/30 rounded-xl px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-2 bg-violet/10 border border-violet/30 rounded-xl px-4 py-2.5">
         <p className="text-xs text-text-primary flex-1">
           New contact — no replies are being sent until you approve them.
         </p>
@@ -72,7 +72,7 @@ export function ConversationActions({
 
   if (conversation.status === "BLOCKED") {
     return (
-      <div className="flex items-center gap-2 bg-spark/10 border border-spark/30 rounded-xl px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-2 bg-spark/10 border border-spark/30 rounded-xl px-4 py-2.5">
         <p className="text-xs text-text-primary flex-1">
           Blocked — this person will never get an auto-reply again.
         </p>

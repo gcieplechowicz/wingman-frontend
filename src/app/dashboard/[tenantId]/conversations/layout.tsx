@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { ConversationList } from "@/components/ConversationList";
+import { ConversationsResponsiveShell } from "@/components/ConversationsResponsiveShell";
 
 export default async function ConversationsLayout({
   children,
@@ -12,9 +13,11 @@ export default async function ConversationsLayout({
   const page = await api.listConversations(tenantId);
 
   return (
-    <div className="h-full flex">
-      <ConversationList tenantId={tenantId} conversations={page.content} />
+    <ConversationsResponsiveShell
+      tenantId={tenantId}
+      list={<ConversationList tenantId={tenantId} conversations={page.content} />}
+    >
       {children}
-    </div>
+    </ConversationsResponsiveShell>
   );
 }

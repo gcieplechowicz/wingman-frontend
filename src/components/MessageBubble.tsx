@@ -7,7 +7,7 @@ export function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isAssistant ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[70%] px-4 py-2.5 ${isAssistant ? "bubble-out" : "bubble-in"}`}
+        className={`max-w-[88%] sm:max-w-[75%] md:max-w-[70%] px-4 py-2.5 ${isAssistant ? "bubble-out" : "bubble-in"}`}
       >
         <p className="text-[0.925rem] leading-relaxed whitespace-pre-wrap">{message.content}</p>
         <p

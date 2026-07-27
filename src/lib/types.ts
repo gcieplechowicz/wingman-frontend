@@ -17,6 +17,9 @@ export type Conversation = {
   id: string;
   tenantId: string;
   externalContactId: string;
+  displayName: string | null;
+  username: string | null;
+  phoneNumber: string | null;
   summary: string | null;
   totalMessageCount: number;
   status: "PENDING" | "APPROVED" | "BLOCKED";

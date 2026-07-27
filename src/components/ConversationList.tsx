@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Conversation } from "@/lib/types";
-import { formatListTimestamp } from "@/lib/format";
-
-function contactLabel(externalContactId: string) {
-  // Telegram chat ids are numeric; show the last 4 digits as a friendly tag
-  // until the person has a name to attach (there's no contact-naming feature yet).
-  return `Match ···${externalContactId.slice(-4)}`;
-}
+import { contactLabel, formatListTimestamp } from "@/lib/format";
 
 export function ConversationList({
   tenantId,
@@ -22,7 +16,7 @@ export function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="w-[360px] shrink-0 border-r border-border flex items-center justify-center px-8 text-center">
+      <div className="w-full md:w-[360px] h-full md:shrink-0 border-r-0 md:border-r border-border flex items-center justify-center px-8 text-center">
         <p className="text-sm text-text-muted">
           No conversations yet. Once a match texts this account on Telegram, it'll show up here.
         </p>
@@ -31,7 +25,7 @@ export function ConversationList({
   }
 
   return (
-    <div className="w-[360px] shrink-0 border-r border-border overflow-y-auto">
+    <div className="w-full md:w-[360px] h-full md:shrink-0 border-r-0 md:border-r border-border overflow-y-auto">
       {conversations.map((conversation) => {
         const isActive = pathname.endsWith(conversation.id);
         return (
@@ -50,7 +44,7 @@ export function ConversationList({
                 {conversation.status === "BLOCKED" && (
                   <span className="w-1.5 h-1.5 rounded-full bg-spark-dim shrink-0" title="Blocked" />
                 )}
-                {contactLabel(conversation.externalContactId)}
+                {contactLabel(conversation)}
               </span>
               <span className="text-[11px] font-mono text-text-muted shrink-0">
                 {formatListTimestamp(conversation.updatedAt)}

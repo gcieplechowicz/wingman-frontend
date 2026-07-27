@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { TenantNav } from "@/components/TenantNav";
+import { RealtimeConnection } from "@/components/RealtimeConnection";
 
 export default async function TenantLayout({
   children,
@@ -13,13 +14,14 @@ export default async function TenantLayout({
   const tenant = await api.getTenant(tenantId);
 
   return (
-    <div className="h-screen flex flex-col">
-      <header className="border-b border-border px-8 py-4 flex items-center justify-between shrink-0">
-        <div>
+    <div className="h-full flex flex-col">
+      <RealtimeConnection tenantId={tenant.id} />
+      <header className="border-b border-border px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-0 md:justify-between shrink-0">
+        <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-lg font-semibold">{tenant.name}</h1>
+            <h1 className="font-display text-lg font-semibold truncate">{tenant.name}</h1>
             <span
-              className={`text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full ${
+              className={`text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 ${
                 tenant.active ? "bg-online/15 text-online" : "bg-text-muted/15 text-text-muted"
               }`}
             >

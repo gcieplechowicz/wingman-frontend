@@ -10,7 +10,7 @@ export default async function TenantSettingsPage({
   const tenant = await api.getTenant(tenantId);
 
   return (
-    <main className="h-full overflow-y-auto px-10 py-10">
+    <main className="h-full overflow-y-auto px-4 md:px-10 py-6 md:py-10">
       <TenantForm mode="edit" tenant={tenant} />
     </main>
   );
