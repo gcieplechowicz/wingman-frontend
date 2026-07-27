@@ -21,6 +21,9 @@ export type Conversation = {
   username: string | null;
   phoneNumber: string | null;
   summary: string | null;
+  /** Raw text still sitting in ingestion-service's debounce buffer - not yet a real Message row. */
+  pendingBuffer: string | null;
+  pendingMessageCount: number;
   totalMessageCount: number;
   status: "PENDING" | "APPROVED" | "BLOCKED";
   createdAt: string;
@@ -33,6 +36,27 @@ export type Message = {
   role: "USER" | "ASSISTANT";
   content: string;
   createdAt: string;
+};
+
+export type Analytics = {
+  responseRate: {
+    totalCount: number;
+    quietCount: number;
+    activeRate: number | null;
+  };
+  replyTimes: {
+    assistantMedianReplySeconds: number | null;
+    contactMedianReplySeconds: number | null;
+  };
+  messageVolume: {
+    day: string;
+    userMessageCount: number;
+    assistantMessageCount: number;
+  }[];
+};
+
+export type HourlyActivity = {
+  hourlyActivity: { hour: number; messageCount: number }[];
 };
 
 export type Page<T> = {

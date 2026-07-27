@@ -5,7 +5,12 @@ import { usePathname } from "next/navigation";
 
 export function TenantNav({ tenantId }: { tenantId: string }) {
   const pathname = usePathname();
-  const isSettings = pathname.includes("/settings");
+
+  const activeTab: "conversations" | "settings" | "analytics" = pathname.includes("/settings")
+    ? "settings"
+    : pathname.includes("/analytics")
+      ? "analytics"
+      : "conversations";
 
   const tabClass = (active: boolean) =>
     `text-sm font-medium px-4 py-1.5 rounded-full transition-colors ${
@@ -14,10 +19,13 @@ export function TenantNav({ tenantId }: { tenantId: string }) {
 
   return (
     <nav className="flex gap-1 bg-surface rounded-full p-1">
-      <Link href={`/dashboard/${tenantId}/conversations`} className={tabClass(!isSettings)}>
+      <Link href={`/dashboard/${tenantId}/conversations`} className={tabClass(activeTab === "conversations")}>
         Conversations
       </Link>
-      <Link href={`/dashboard/${tenantId}/settings`} className={tabClass(isSettings)}>
+      <Link href={`/dashboard/${tenantId}/analytics`} className={tabClass(activeTab === "analytics")}>
+        Analytics
+      </Link>
+      <Link href={`/dashboard/${tenantId}/settings`} className={tabClass(activeTab === "settings")}>
         Settings
       </Link>
     </nav>

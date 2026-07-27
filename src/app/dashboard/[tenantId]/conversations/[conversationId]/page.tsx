@@ -8,10 +8,18 @@ export default async function ConversationDetailPage({
 }) {
   const { tenantId, conversationId } = await params;
 
-  const [conversation, messagesPage] = await Promise.all([
+  const [conversation, messagesPage, hourlyActivity] = await Promise.all([
     api.getConversation(conversationId),
     api.listMessages(conversationId),
+    api.getHourlyActivity(conversationId),
   ]);
 
-  return <ChatPane tenantId={tenantId} conversation={conversation} messages={messagesPage.content} />;
+  return (
+    <ChatPane
+      tenantId={tenantId}
+      conversation={conversation}
+      messages={messagesPage.content}
+      hourlyActivity={hourlyActivity.hourlyActivity}
+    />
+  );
 }

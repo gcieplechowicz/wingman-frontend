@@ -13,7 +13,17 @@ const NEAR_BOTTOM_THRESHOLD_PX = 120;
  * messages, a new message elsewhere (or an unrelated broadcast causing a
  * refresh) won't yank them back down.
  */
-export function MessageList({ summary, messages }: { summary: string | null; messages: Message[] }) {
+export function MessageList({
+  summary,
+  messages,
+  pendingBuffer,
+  pendingMessageCount,
+}: {
+  summary: string | null;
+  messages: Message[];
+  pendingBuffer?: string | null;
+  pendingMessageCount?: number;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
 
@@ -28,7 +38,7 @@ export function MessageList({ summary, messages }: { summary: string | null; mes
     const el = containerRef.current;
     if (!el || !isNearBottomRef.current) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [messages, pendingBuffer]);
 
   return (
     <div
@@ -44,6 +54,19 @@ export function MessageList({ summary, messages }: { summary: string | null; mes
       {messages.map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}
+      {pendingBuffer && (
+        <div className="flex justify-start">
+          <div className="max-w-[88%] sm:max-w-[75%] md:max-w-[70%]">
+            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
+              {(pendingMessageCount ?? 1) > 1 ? `${pendingMessageCount} new messages` : "New message"} — not sent to
+              your assistant yet
+            </p>
+            <div className="px-4 py-2.5 rounded-bubble rounded-bl-md bg-surface-raised border-2 border-dashed border-border opacity-70">
+              <p className="text-[0.925rem] leading-relaxed whitespace-pre-wrap">{pendingBuffer}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

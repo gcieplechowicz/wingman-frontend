@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import type {
+  Analytics,
   Conversation,
+  HourlyActivity,
   Message,
   Page,
   Tenant,
@@ -68,6 +70,11 @@ export const api = {
 
   listMessages: (conversationId: string, page = 0) =>
     apiFetch<Page<Message>>(`/api/conversations/${conversationId}/messages?page=${page}&size=100`),
+
+  getAnalytics: (tenantId: string) => apiFetch<Analytics>(`/api/tenants/${tenantId}/analytics`),
+
+  getHourlyActivity: (conversationId: string) =>
+    apiFetch<HourlyActivity>(`/api/conversations/${conversationId}/hourly-activity`),
 };
 
 export { ApiError };
